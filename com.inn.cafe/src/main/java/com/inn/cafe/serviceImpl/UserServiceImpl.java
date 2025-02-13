@@ -5,6 +5,7 @@ import com.inn.cafe.dao.UserDao;
 import com.inn.cafe.pojo.User;
 import com.inn.cafe.service.UserService;
 import com.inn.cafe.utils.CafeUtils;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.Map;
 import java.util.Objects;
 
+@Setter
 @Slf4j
 @Service
 public class UserServiceImpl implements UserService {
@@ -42,10 +44,11 @@ public class UserServiceImpl implements UserService {
             }
 
         } catch (Exception e) {
-            return CafeUtils.getResponse("Something went wrong while validating",HttpStatus.BAD_REQUEST);
+            return CafeUtils.getResponse("Something went wrong while validating", HttpStatus.BAD_REQUEST);
 
         }
     }
+
     private boolean validateRequestBody(Map<String, String> requestBody) {
         return requestBody.containsKey("name") && requestBody.containsKey("contactNumber") &&
                 requestBody.containsKey("email") && requestBody.containsKey("password");
