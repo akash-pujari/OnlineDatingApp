@@ -26,4 +26,24 @@ public class UserRestImpl implements UserRest {
             return CafeUtils.getResponse(SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @Override
+    public ResponseEntity<String> login(String username, String password,String email) {
+       try {
+           return userService.login(username, password,email);
+       }
+       catch (RuntimeException e){
+           return CafeUtils.getResponse(SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+       }
+    }
+
+    @Override
+    public ResponseEntity<String> forgotPassword(String username, String password, String email) {
+       try {
+           return userService.forgotPassword(username, password, email);
+       }
+       catch (RuntimeException e){
+           return CafeUtils.getResponse(SOMETHING_WENT_WRONG, HttpStatus.INTERNAL_SERVER_ERROR);
+       }
+    }
 }

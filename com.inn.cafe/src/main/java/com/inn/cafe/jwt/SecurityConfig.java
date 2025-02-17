@@ -49,7 +49,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable()) // CSRF is disabled
                 .authorizeRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/user/login", "/user/signup", "/user/forgotpassword").permitAll() // Public endpoints
+                                .requestMatchers("/user/login/*/*", "/user/signup", "/user/forgotPassword/*").permitAll() // Public endpoints
                                 .anyRequest().authenticated() // All other endpoints require authentication
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class) // Add custom JWT filter

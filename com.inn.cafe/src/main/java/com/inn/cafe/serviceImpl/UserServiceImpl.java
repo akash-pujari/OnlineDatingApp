@@ -49,6 +49,42 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public ResponseEntity<String> login(String username, String password, String email) {
+        User user = userDao.findByEmailId(email);
+        if (user == null) {
+            log.info("user not found :{}", username);
+            return CafeUtils.getResponse("Bad request", HttpStatus.BAD_REQUEST);
+        } else {
+            if (Objects.equals(username, user.getName()) && Objects.equals(password, user.getPassword())) {
+                log.info("user details fetched successfully for user; {}", username + "!");
+                return CafeUtils.getResponse("logged Successfully!", HttpStatus.OK);
+            }
+            else {
+                return CafeUtils.getResponse("wrong password!, please use correct password or change your password by clicking on forgot password", HttpStatus.BAD_REQUEST);
+            }
+        }
+    }
+
+    @Override
+    public ResponseEntity<String> forgotPassword(String username, String newPassword, String email) {
+        User user = userDao.findByEmailId(email);
+        if(Objects.isNull(user)){
+            log.info("user not found :{}", username);
+            return CafeUtils.getResponse("Bad request", HttpStatus.BAD_REQUEST);
+        }
+        else {
+            if (Objects.equals(username, user.getName()) && Objects.equals(email,user.getEmail())) {
+                log.info("user details fetched successfully for user; {}", username + "!");
+                userDao.updateUserPassword(newPassword,email);
+                return CafeUtils.getResponse("user password updated successfully!", HttpStatus.NO_CONTENT);
+            }
+            else {
+                return CafeUtils.getResponse("try with valid email!", HttpStatus.BAD_REQUEST);
+            }
+        }
+    }
+
     private boolean validateRequestBody(Map<String, String> requestBody) {
         return requestBody.containsKey("name") && requestBody.containsKey("contactNumber") &&
                 requestBody.containsKey("email") && requestBody.containsKey("password");
@@ -57,7 +93,7 @@ public class UserServiceImpl implements UserService {
     private User getUserFromRequestMap(Map<String, String> requestBody) {
         User user = new User();
         user.setName(requestBody.get("name"));
-        user.setContactNumber("contactNumber");
+        user.setContactNumber(requestBody.get("contactNumber"));
         log.info("Setting contactNumber: {}", requestBody.get("contactNumber")); // Log contactNumber
         user.setEmail(requestBody.get("email"));
         user.setPassword(requestBody.get("password"));
