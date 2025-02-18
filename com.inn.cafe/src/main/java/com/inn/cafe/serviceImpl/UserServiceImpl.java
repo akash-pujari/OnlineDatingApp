@@ -2,6 +2,8 @@ package com.inn.cafe.serviceImpl;
 
 import com.inn.cafe.constants.CafeConstants;
 import com.inn.cafe.dao.UserDao;
+import com.inn.cafe.jwt.CustomerUserDetailsService;
+import com.inn.cafe.jwt.JwtUtil;
 import com.inn.cafe.pojo.User;
 import com.inn.cafe.service.UserService;
 import com.inn.cafe.utils.CafeUtils;
@@ -10,6 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -22,6 +27,15 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     UserDao userDao;
+
+    @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
+    CustomerUserDetailsService customerUserDetailsService;
+
+    @Autowired
+    JwtUtil jwtUtil;
 
     @Override
     public ResponseEntity<String> signUp(Map<String, String> requestBody) {
@@ -49,42 +63,6 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    @Override
-    public ResponseEntity<String> login(String username, String password, String email) {
-        User user = userDao.findByEmailId(email);
-        if (user == null) {
-            log.info("user not found :{}", username);
-            return CafeUtils.getResponse("Bad request", HttpStatus.BAD_REQUEST);
-        } else {
-            if (Objects.equals(username, user.getName()) && Objects.equals(password, user.getPassword())) {
-                log.info("user details fetched successfully for user; {}", username + "!");
-                return CafeUtils.getResponse("logged Successfully!", HttpStatus.OK);
-            }
-            else {
-                return CafeUtils.getResponse("wrong password!, please use correct password or change your password by clicking on forgot password", HttpStatus.BAD_REQUEST);
-            }
-        }
-    }
-
-    @Override
-    public ResponseEntity<String> forgotPassword(String username, String newPassword, String email) {
-        User user = userDao.findByEmailId(email);
-        if(Objects.isNull(user)){
-            log.info("user not found :{}", username);
-            return CafeUtils.getResponse("Bad request", HttpStatus.BAD_REQUEST);
-        }
-        else {
-            if (Objects.equals(username, user.getName()) && Objects.equals(email,user.getEmail())) {
-                log.info("user details fetched successfully for user; {}", username + "!");
-                userDao.updateUserPassword(newPassword,email);
-                return CafeUtils.getResponse("user password updated successfully!", HttpStatus.NO_CONTENT);
-            }
-            else {
-                return CafeUtils.getResponse("try with valid email!", HttpStatus.BAD_REQUEST);
-            }
-        }
-    }
-
     private boolean validateRequestBody(Map<String, String> requestBody) {
         return requestBody.containsKey("name") && requestBody.containsKey("contactNumber") &&
                 requestBody.containsKey("email") && requestBody.containsKey("password");
@@ -101,5 +79,24 @@ public class UserServiceImpl implements UserService {
         user.setRole(requestBody.get("role"));
         return user;
 
+    }
+
+    @Override
+    public ResponseEntity<String> login(Map<String, String> requestMap) {
+        log.info("Inside login");
+        try {
+            Authentication auth = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(requestMap.get("email"), requestMap.get("password")));
+            if (auth.isAuthenticated()) {
+             if(customerUserDetailsService.getUserDetail().getStatus().equalsIgnoreCase("true")){
+                 return new ResponseEntity<>("{\"token\":\""+jwtUtil.generateToken(customerUserDetailsService.getUserDetail().getEmail()+"\"}",customerUserDetailsService.getUserDetail().getRole()),HttpStatus.OK);
+             }
+             else {
+                 return new ResponseEntity<String>("{\"message\":\"" + "wait for admin approval."+"\"}",HttpStatus.BAD_REQUEST);
+             }
+            }
+        } catch (Exception ex) {
+            log.error("{ }", ex);
+        }
+        return new ResponseEntity<String>("{\"message\":\"" + "Bad credentials."+"\"}",HttpStatus.BAD_REQUEST);
     }
 }

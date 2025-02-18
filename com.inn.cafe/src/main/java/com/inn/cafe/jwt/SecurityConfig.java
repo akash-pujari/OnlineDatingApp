@@ -46,11 +46,11 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues())) // CORS configuration
-                .csrf(csrf -> csrf.disable()) // CSRF is disabled
+                .csrf(csrf -> csrf.disable())
                 .authorizeRequests(authorizeRequests ->
                         authorizeRequests
-                                .requestMatchers("/user/login/*/*", "/user/signup", "/user/forgotPassword/*").permitAll() // Public endpoints
-                                .anyRequest().authenticated() // All other endpoints require authentication
+                                .requestMatchers("/user/login", "/user/signup", "/user/forgotPassword/*").permitAll() // Public endpoints
+                                .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class) // Add custom JWT filter
                 .sessionManagement(sessionManagement ->
